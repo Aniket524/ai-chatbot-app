@@ -6,12 +6,15 @@ const authRoutes = require('./routes/authRoutes');
 const friendRoutes = require('./routes/friendRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const authenticate = require('./middleware/authMiddleware');
+const cors = require('cors');
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors());
+app.use(express.json());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
