@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-function Login() {
+function Login({ setIsAuthenticated }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -36,6 +36,7 @@ function Login() {
       if (response.status === 200) {
         const { token } = response.data;
         localStorage.setItem("authToken", token);
+        setIsAuthenticated(true);
         setSuccess("Login successful! Redirecting...");
         setFormData({ email: "", password: "" });
         navigate("/main/friends");

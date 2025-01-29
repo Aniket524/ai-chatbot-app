@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-function Register() {
+function Register({ setIsAuthenticated }) {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -43,6 +43,7 @@ function Register() {
       });
 
       localStorage.setItem("authToken", response.data.token);
+      setIsAuthenticated(true);
       setSuccess("Registration successful! You can now log in.");
       setFormData({
         username: "",

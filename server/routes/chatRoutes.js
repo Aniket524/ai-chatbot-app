@@ -25,109 +25,39 @@ router.get('/:friendId', authenticate, async (req, res) => {
         if (!chat) {
             return res.status(404).json({ message: 'No chat history found' });
         }
-
+        console.log(chat)
         res.status(200).json(chat);
     } catch (err) {
         res.status(500).json({ message: 'Error fetching chat history' });
     }
 });
 
-// Send a Message and Get AI Response
-// router.post('/:friendId', authenticate, async (req, res) => {
-//     const { friendId } = req.params;
-//     const { message } = req.body;
-
-//     try {
-//         // Check if the friend exists
-//         const friend = await Friend.findById(friendId);
-//         if (!friend) {
-//             return res.status(404).json({ message: 'Friend not found' });
-//         }
-
-//         // Retrieve existing chat history, if any
-//         let chat = await Chat.findOne({ 
-//             userId: req.user._id, 
-//             friendId 
-//         });
-
-//         if (!chat) {
-//             // If no chat history exists, create a new one
-//             console.log('no chats found')
-//             chat = new Chat({
-//                 userId: req.user._id,
-//                 friendId,
-//                 messages: [],
-//             });
-//         }
-
-//         // Add the user's message to the chat
-//         chat.messages.push({ sender: 'user', message });
-//         console.log(chat.messages)
-        
-//         // Get AI-generated response based on chat history and personality traits
-//         const personalityTraits = friend.personalityTraits.join(", ");
-//         console.log(personalityTraits)
-//         const chatHistory = chat.messages.map(msg => `${msg.sender}: ${msg.message}`).join("\n");
-//         console.log(chatHistory)
-//         const aiResponse = await getAIResponse(chatHistory, personalityTraits,friend);
-//         console.log(aiResponse)
-
-//         // Add the AI's response to the chat
-//         chat.messages.push({ sender: 'friend', message: aiResponse });
-
-//         // Save the chat history in the database
-//         await chat.save();
-
-//         res.status(200).json({ message: aiResponse });
-//     } catch (err) {
-//         res.status(500).json({ message: 'Error sending message' });
-//     }
-// });
-
+// Backend route (modified to prevent duplicates)
 router.post('/:friendId', authenticate, async (req, res) => {
-    const { friendId } = req.params;
-    const { message } = req.body;
-
     try {
-        // Check if the friend exists
-        const friend = await Friend.findById(friendId);
-        if (!friend) {
-            return res.status(404).json({ message: 'Friend not found' });
-        }
+        const friend = await Friend.findById(req.params.friendId);
+        if (!friend) return res.status(404).json({ message: 'Friend not found' });
 
-        // Retrieve existing chat history, if any
-        let chat = await Chat.findOne({ 
-            userId: req.user._id, 
-            friendId 
-        });
+        let chat = await Chat.findOne({ userId: req.user._id, friendId: req.params.friendId });
+        if (!chat) chat = new Chat({ userId: req.user._id, friendId: req.params.friendId, messages: [] });
 
-        if (!chat) {
-            // If no chat history exists, create a new one
-            chat = new Chat({
-                userId: req.user._id,
-                friendId,
-                messages: [],
-            });
-        }
+        // Add user message
+        const userMessage = { sender: 'user', message: req.body.message };
+        chat.messages.push(userMessage);
 
-        // Add the user's message to the chat
-        chat.messages.push({ sender: 'user', message });
+        // Generate AI response
+        const aiResponse = await getAIResponse(
+            chat.messages.map(msg => `${msg.sender}: ${msg.message}`).join('\n'),
+            friend.personalityTraits.join(', '),
+            friend
+        );
+
+        // Add AI response
+        const aiMessage = { sender: friend.name, message: aiResponse };
+        chat.messages.push(aiMessage);
         
-        // Get AI-generated response based on chat history and personality traits
-        const personalityTraits = friend.personalityTraits.join(", ");
-        const chatHistory = chat.messages.map(msg => `${msg.sender}: ${msg.message}`).join("\n");
-        const aiResponse = await getAIResponse(chatHistory, personalityTraits, friend);
-
-        console.log(aiResponse)
-
-        // Add the AI's response to the chat
-        chat.messages.push({ sender: 'friend', message: aiResponse });
-
-        // Save the chat history in the database
         await chat.save();
-
-        // Return the updated chat messages
-        res.status(200).json({ messages: chat.messages });
+        res.status(200).json({ messages: [aiMessage] }); // Return only AI's response
     } catch (err) {
         res.status(500).json({ message: 'Error sending message' });
     }
