@@ -71,7 +71,7 @@ const ChatPage = () => {
           messages.map((msg, index) => (
             <div
               key={index}
-              className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex ${msg.sender === "user" ? "justify-end chat chat-end" : "justify-start chat chat-start"}`}
             >
               <div
                 className={`max-w-md p-4 rounded-lg ${
@@ -80,7 +80,7 @@ const ChatPage = () => {
                     : "bg-white text-gray-800"
                 }`}
               >
-                <div>{`${msg.sender === "user" ? "You: " : ""}${msg.message}`}</div>
+                <div className="chat-bubble">{`${msg.sender === "user" ? "You: " : ""}${msg.message}`}</div>
               </div>
             </div>
           ))
@@ -119,7 +119,8 @@ const ChatPage = () => {
               className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-all"
               disabled={loading}
             >
-              {loading ? "Sending..." : "Send"}
+              {/* {loading ? "Sending..." : "Send"} */}
+              send
             </button>
           </div>
         </div>
